@@ -114,6 +114,31 @@ def transcribe_to_mrna(sequence: str) -> str:
     return sequence.replace("T", "U").replace("t", "u")
 
 
+def sliding_window_gc(sequence: str, window_size: int = 10, step: int = 1) -> list:
+    """Calculates GC content in a sliding window along the sequence.
+    Returns a list of dicts with 'start_position' and 'gc_content'.
+    Only counts uppercase nucleotides (ignores inserted name)."""
+    clean_seq = "".join(c for c in sequence if c.isupper() and c in "ACGT")
+    results = []
+
+    for i in range(0, len(clean_seq) - window_size + 1, step):
+        window = clean_seq[i:i + window_size]
+        gc = window.count("G") + window.count("C")
+        gc_pct = round(gc / window_size * 100, 2)
+        results.append({"start_position": i + 1, "gc_content": gc_pct})
+
+    return results
+
+
+def save_gc_to_csv(results: list, filename: str = "gc_sliding_window.csv"):
+    """Saves sliding window GC content results to a CSV file."""
+    with open(filename, "w", newline="") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=["start_position", "gc_content"])
+        writer.writeheader()
+        writer.writerows(results)
+    print(f"GC sliding window data saved to: {filename}")
+
+
 def main():
     """Main function - orchestrates user input, sequence generation, and output."""
 
@@ -161,6 +186,11 @@ def main():
     with open(filename, "a") as f:
         f.write("\n" + mrna_fasta + "\n")
     print(f"mRNA transcript added to {filename}")
+
+    raw = input("Enter sliding window size (default=10): ").strip()
+    window = int(raw) if raw.isdigit() and 1 <= int(raw) <= length else 10
+    gc_results = sliding_window_gc(sequence, window_size=window)
+    save_gc_to_csv(gc_results, filename=f"{seq_id}_gc_window.csv")
 
 
 if __name__ == "__main__":
