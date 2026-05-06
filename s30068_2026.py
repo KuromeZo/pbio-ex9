@@ -79,6 +79,21 @@ def format_fasta(seq_id: str, description: str, sequence: str, line_width: int =
     return header + "\n" + "\n".join(lines)
 
 
+def find_motif(sequence: str, motif: str) -> list:
+    """Searches for all occurrences of a motif in the sequence.
+    Returns a list of positions (1-based indexing, biological convention)."""
+    positions = []
+    clean_seq = "".join(c for c in sequence if c.isupper())
+    start = 0
+    while True:
+        pos = clean_seq.find(motif.upper(), start)
+        if pos == -1:
+            break
+        positions.append(pos + 1)
+        start = pos + 1
+    return positions
+
+
 def main():
     """Main function - orchestrates user input, sequence generation, and output."""
 
@@ -103,6 +118,14 @@ def main():
     for base in ["A", "C", "G", "T"]:
         print(f"  {base}: {stats[base]:.2f}%")
     print(f"  GC-content: {stats['GC']:.2f}%")
+
+    motif = input("\nEnter a motif to search for (e.g. ATG), or press Enter to skip: ").strip()
+    if motif:
+        positions = find_motif(sequence, motif)
+        if positions:
+            print(f"Motif '{motif.upper()}' found at positions: {positions}")
+        else:
+            print(f"Motif '{motif.upper()}' not found in the sequence.")
 
 
 if __name__ == "__main__":
