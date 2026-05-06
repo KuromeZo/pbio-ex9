@@ -94,6 +94,26 @@ def find_motif(sequence: str, motif: str) -> list:
     return positions
 
 
+def reverse_complement(sequence: str) -> str:
+    """Returns the reverse complementary strand of a DNA sequence.
+    Complement: A<->T, C<->G. Then reverse the result."""
+    complement_map = {"A": "T", "T": "A", "C": "G", "G": "C"}
+    complement = ""
+    for base in sequence:
+        if base.upper() in complement_map:
+            comp = complement_map[base.upper()]
+            complement += comp if base.isupper() else comp.lower()
+        else:
+            complement += base
+    return complement[::-1]
+
+
+def transcribe_to_mrna(sequence: str) -> str:
+    """Performs in silico transcription: replaces T with U to get mRNA sequence.
+    Lowercase letters (user name) are preserved as-is."""
+    return sequence.replace("T", "U").replace("t", "u")
+
+
 def main():
     """Main function - orchestrates user input, sequence generation, and output."""
 
@@ -126,6 +146,21 @@ def main():
             print(f"Motif '{motif.upper()}' found at positions: {positions}")
         else:
             print(f"Motif '{motif.upper()}' not found in the sequence.")
+
+    print("\nGenerating complementary sequences...")
+    rev_comp = reverse_complement(sequence)
+    comp_fasta = format_fasta(seq_id + "_revcomp", "Reverse complement", rev_comp)
+
+    with open(filename, "a") as f:
+        f.write("\n" + comp_fasta + "\n")
+    print(f"Reverse complement added to {filename}")
+
+    mrna = transcribe_to_mrna(sequence)
+    mrna_fasta = format_fasta(seq_id + "_mRNA", "mRNA transcript (T->U)", mrna)
+
+    with open(filename, "a") as f:
+        f.write("\n" + mrna_fasta + "\n")
+    print(f"mRNA transcript added to {filename}")
 
 
 if __name__ == "__main__":
