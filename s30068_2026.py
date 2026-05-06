@@ -40,6 +40,31 @@ def generate_sequence(length: int) -> str:
     return "".join(random.choice(nucleotides) for _ in range(length))
 
 
+def calculate_stats(sequence: str) -> dict:
+    """Returns a dictionary of sequence statistics.
+    Keys: 'A', 'C', 'G', 'T' (float values, %), 'GC' (float value, %)."""
+    clean = [c for c in sequence if c.upper() in "ACGT"]
+    total = len(clean)
+
+    if total == 0:
+        return {"A": 0.0, "C": 0.0, "G": 0.0, "T": 0.0, "GC": 0.0}
+
+    counts = {"A": 0, "C": 0, "G": 0, "T": 0}
+    for nucleotide in clean:
+        counts[nucleotide.upper()] += 1
+
+    stats = {base: round(counts[base] / total * 100, 2) for base in "ACGT"}
+    stats["GC"] = round((counts["G"] + counts["C"]) / total * 100, 2)
+    return stats
+
+
+def insert_name(sequence: str, name: str) -> str:
+    """Inserts a name at a random position in the sequence.
+    Name is written in lowercase so it is visually distinguishable from nucleotides."""
+    position = random.randint(0, len(sequence))
+    return sequence[:position] + name.lower() + sequence[position:]
+
+
 def format_fasta(seq_id: str, description: str, sequence: str, line_width: int = 80) -> str:
     """Returns a formatted FASTA record as a string.
     Header: >ID description
@@ -60,16 +85,24 @@ def main():
     length = validate_positive_int("Enter sequence length: ")
     seq_id = validate_id("Enter sequence ID: ")
     description = input("Enter a description of the sequence: ")
+    name = input("Enter your name: ")
 
     sequence = generate_sequence(length)
+    sequence_with_name = insert_name(sequence, name)
 
-    fasta_content = format_fasta(seq_id, description, sequence)
+    fasta_content = format_fasta(seq_id, description, sequence_with_name)
     filename = f"{seq_id}.fasta"
 
     with open(filename, "w") as f:
         f.write(fasta_content + "\n")
 
     print(f"Sequence saved to file: {filename}")
+
+    stats = calculate_stats(sequence)
+    print(f"\nSequence statistics (n={length}):")
+    for base in ["A", "C", "G", "T"]:
+        print(f"  {base}: {stats[base]:.2f}%")
+    print(f"  GC-content: {stats['GC']:.2f}%")
 
 
 if __name__ == "__main__":
